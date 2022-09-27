@@ -61,6 +61,11 @@
         "key": "ctrl+k",
         "command": "minimal-emacs.ctrl+k",
         "when": "editorTextFocus"
+      },
+      {
+        "key": "ctrl+y",
+        "command": "minimal-emacs.ctrl+y",
+        "when": "editorTextFocus"
       }
     ]
   },
