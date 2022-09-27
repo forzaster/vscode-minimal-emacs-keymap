@@ -28,7 +28,7 @@
           "to": "right",
           "value": 1
         },
-        "when": "editorTextFocus"
+        "when": "editorTextFocus && !emacsKey.selectMode"
       },
       {
         "key": "ctrl+b",
@@ -37,7 +37,7 @@
           "to": "left",
           "value": 1
         },
-        "when": "editorTextFocus"
+        "when": "editorTextFocus && !emacsKey.selectMode"
       },
       {
         "key": "ctrl+p",
@@ -46,7 +46,7 @@
           "to": "up",
           "value": 1
         },
-        "when": "editorTextFocus"
+        "when": "editorTextFocus && !emacsKey.selectMode"
       },
       {
         "key": "ctrl+n",
@@ -55,7 +55,27 @@
           "to": "down",
           "value": 1
         },
-        "when": "editorTextFocus"
+        "when": "editorTextFocus && !emacsKey.selectMode"
+      },
+      {
+        "key": "ctrl+f",
+        "command": "cursorRightSelect",
+        "when": "editorTextFocus && emacsKey.selectMode"
+      },
+      {
+        "key": "ctrl+b",
+        "command": "cursorLeftSelect",
+        "when": "editorTextFocus && emacsKey.selectMode"
+      },
+      {
+        "key": "ctrl+p",
+        "command": "cursorUpSelect",
+        "when": "editorTextFocus && emacsKey.selectMode"
+      },
+      {
+        "key": "ctrl+n",
+        "command": "cursorDownSelect",
+        "when": "editorTextFocus && emacsKey.selectMode"
       },
       {
         "key": "ctrl+k",
@@ -65,6 +85,16 @@
       {
         "key": "ctrl+y",
         "command": "minimal-emacs.ctrl+y",
+        "when": "editorTextFocus"
+      },
+      {
+        "key": "ctrl+space",
+        "command": "minimal-emacs.ctrl+space",
+        "when": "editorTextFocus"
+      },
+      {
+        "key": "ctrl+w",
+        "command": "minimal-emacs.ctrl+w",
         "when": "editorTextFocus"
       }
     ]
