@@ -21,7 +21,7 @@ export function registerCommands(context: vscode.ExtensionContext) {
         emacsExt.toggleSelectionAnchor()
     });
     registerCommand('minimal-emacs.ctrl+w', () => {
-        emacsExt.cutSelection()
+        emacsExt.copySelection(true)
     });
 
     console.log('registerCommands in keymap done')
@@ -99,7 +99,7 @@ class EmacsExt {
         this._selectMode = mode
     }
 
-    public cutSelection() {
+    public copySelection(is_cut: boolean) {
         if (!this._selectMode) {
             return
         }
@@ -114,7 +114,9 @@ class EmacsExt {
         }
 
         let text = editor.document.getText(selection)
-        editor.edit(builder => builder.delete(selection))
+        if (is_cut) {
+            editor.edit(builder => builder.delete(selection))
+        }
         this._textBuffer = text
         this._posAtTextBufferred = new vscode.Position(0, 0)
 

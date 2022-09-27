@@ -96,6 +96,26 @@
         "key": "ctrl+w",
         "command": "minimal-emacs.ctrl+w",
         "when": "editorTextFocus"
+      },
+      {
+        "key": "ctrl+x ctrl+s",
+        "command": "workbench.action.files.save",
+        "when": "editorTextFocus"
+      },
+      {
+        "key": "ctrl+s",
+        "command": "actions.find",
+        "when": "editorTextFocus && !textInputFocus"
+      },
+      {
+        "key": "ctrl+s",
+        "command": "editor.action.nextMatchFindAction",
+        "when": "editorTextFocus && textInputFocus"
+      },
+      {
+        "key": "ctrl+r",
+        "command": "editor.action.previousMatchFindAction",
+        "when": "editorTextFocus && textInputFocus"
       }
     ]
   },
