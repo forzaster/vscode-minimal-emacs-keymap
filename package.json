@@ -116,6 +116,11 @@
         "key": "ctrl+r",
         "command": "editor.action.previousMatchFindAction",
         "when": "editorTextFocus && textInputFocus"
+      },
+      {
+        "key": "ctrl+g",
+        "command": "closeFindWidget",
+        "when": "editorTextFocus && textInputFocus"
       }
     ]
   },
