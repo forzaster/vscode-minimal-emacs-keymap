@@ -1,9 +1,9 @@
-import * as vscode from 'vscode';
+import {ExtensionContext, commands, Position, Selection, window} from 'vscode';
 
 
-export function registerCommands(context: vscode.ExtensionContext) {
+export function registerCommands(context: ExtensionContext) {
     function registerCommand(commandid: string, command_func: (...args: any[]) => any) {
-        let command = vscode.commands.registerCommand(commandid, command_func);
+        let command = commands.registerCommand(commandid, command_func);
         context.subscriptions.push(command);    
     }
 
@@ -27,21 +27,21 @@ export function registerCommands(context: vscode.ExtensionContext) {
 
 class EmacsExt {
     private _textBuffer: string;
-    private _posAtTextBufferred: vscode.Position;
+    private _posAtTextBufferred: Position;
     private _selectMode: boolean = true;
 
     constructor() {
         this._textBuffer = ''
-        this._posAtTextBufferred = new vscode.Position(0, 0);
+        this._posAtTextBufferred = new Position(0, 0);
         this.toggleSelectionAnchor()
     }
 
     private setFlag(name: string, v: boolean) {
-        vscode.commands.executeCommand('setContext', name, v);
+        commands.executeCommand('setContext', name, v);
     }
 
     public deleteLine() {
-        let editor = vscode.window.activeTextEditor;
+        let editor = window.activeTextEditor;
         if (!editor) {
             return;
         }
@@ -57,13 +57,13 @@ class EmacsExt {
             return;
         }
 
-        let endPos = new vscode.Position(selection.start.line, line.text.length)
+        let endPos = new Position(selection.start.line, line.text.length)
         if (selection.start.character == line.text.length) {
             // New line
-            endPos = new vscode.Position(selection.start.line+1, 0)
+            endPos = new Position(selection.start.line+1, 0)
         }
 
-        let target = new vscode.Selection(selection.start, endPos)
+        let target = new Selection(selection.start, endPos)
         let text = editor.document.getText(target)
         //console.log('remove ' + text)
         editor.edit(builder => builder.delete(target))
@@ -78,7 +78,7 @@ class EmacsExt {
     }
 
     public pasteTextBuffer() {
-        let editor = vscode.window.activeTextEditor;
+        let editor = window.activeTextEditor;
         if (!editor) {
             return;
         }
@@ -97,11 +97,11 @@ class EmacsExt {
         this._selectMode = mode
 
         if (!this._selectMode && !this._textBuffer) {
-            let editor = vscode.window.activeTextEditor;
+            let editor = window.activeTextEditor;
             if (!editor) {
                 return;
             }
-            editor.selection = new vscode.Selection(editor.selection.active, editor.selection.active)
+            editor.selection = new Selection(editor.selection.active, editor.selection.active)
         }
     }
 
@@ -109,7 +109,7 @@ class EmacsExt {
         if (!this._selectMode) {
             return
         }
-        let editor = vscode.window.activeTextEditor;
+        let editor = window.activeTextEditor;
         if (!editor) {
             return;
         }
@@ -124,7 +124,7 @@ class EmacsExt {
             editor.edit(builder => builder.delete(selection))
         }
         this._textBuffer = text
-        this._posAtTextBufferred = new vscode.Position(0, 0)
+        this._posAtTextBufferred = new Position(0, 0)
 
         this.toggleSelectionAnchor()
     }
