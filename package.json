@@ -1,7 +1,7 @@
 {
-  "name": "minimal-emacs-keymaps",
-  "displayName": "minimal-emacs-keymaps",
-  "description": "minimal emacs keymaps",
+  "name": "minimal-emacs-keymap",
+  "displayName": "minimal-emacs-keymap",
+  "description": "minimal emacs keymap",
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.71.0"
@@ -16,8 +16,8 @@
   "contributes": {
     "commands": [
       {
-        "command": "minimal-emacs-keymaps.helloWorld",
-        "title": "Hello World"
+        "command": "minimal-emacs-keymap.showInfo",
+        "title": "Show Info"
       }
     ],
     "keybindings": [
