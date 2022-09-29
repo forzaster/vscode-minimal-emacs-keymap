@@ -58,6 +58,16 @@
         "when": "editorTextFocus && !emacsKey.selectMode"
       },
       {
+        "key": "ctrl+a",
+        "command": "cursorLineStart",
+        "when": "editorTextFocus && !emacsKey.selectMode"
+      },
+      {
+        "key": "ctrl+e",
+        "command": "cursorLineEnd",
+        "when": "editorTextFocus && !emacsKey.selectMode"
+      },
+      {
         "key": "ctrl+f",
         "command": "cursorRightSelect",
         "when": "editorTextFocus && emacsKey.selectMode"
@@ -76,6 +86,16 @@
         "key": "ctrl+n",
         "command": "cursorDownSelect",
         "when": "editorTextFocus && emacsKey.selectMode"
+      },
+      {
+        "key": "ctrl+e",
+        "command": "cursorEndSelect",
+        "when": "editorTextFocus && emacsKey.selectMode"
+      },
+      {
+        "key": "ctrl+d",
+        "command": "deleteRight",
+        "when": "editorTextFocus"
       },
       {
         "key": "ctrl+k",
@@ -121,6 +141,11 @@
         "key": "ctrl+g",
         "command": "closeFindWidget",
         "when": "editorTextFocus && textInputFocus"
+      },
+      {
+        "key": "ctrl+/",
+        "command": "undo",
+        "when": "editorTextFocus"
       }
     ]
   },

@@ -2,8 +2,6 @@ import * as vscode from 'vscode';
 
 
 export function registerCommands(context: vscode.ExtensionContext) {
-    console.log('registerCommands in keymap')
-
     function registerCommand(commandid: string, command_func: (...args: any[]) => any) {
         let command = vscode.commands.registerCommand(commandid, command_func);
         context.subscriptions.push(command);    
@@ -97,6 +95,14 @@ class EmacsExt {
         let mode = !this._selectMode
         this.setFlag('emacsKey.selectMode', mode)
         this._selectMode = mode
+
+        if (!this._selectMode && !this._textBuffer) {
+            let editor = vscode.window.activeTextEditor;
+            if (!editor) {
+                return;
+            }
+            editor.selection = new vscode.Selection(editor.selection.active, editor.selection.active)
+        }
     }
 
     public copySelection(is_cut: boolean) {
