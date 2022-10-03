@@ -125,17 +125,17 @@
       {
         "key": "ctrl+s",
         "command": "actions.find",
-        "when": "editorTextFocus && !textInputFocus"
+        "when": "editorFocus || editorIsOpen"
       },
       {
         "key": "ctrl+s",
         "command": "editor.action.nextMatchFindAction",
-        "when": "editorTextFocus && textInputFocus"
+        "when": "editorFocus && findInputFocussed"
       },
       {
         "key": "ctrl+r",
         "command": "editor.action.previousMatchFindAction",
-        "when": "editorTextFocus && textInputFocus"
+        "when": "editorFocus && findInputFocussed"
       },
       {
         "key": "ctrl+g",
