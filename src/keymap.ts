@@ -1,3 +1,4 @@
+import { stringify } from 'querystring';
 import {ExtensionContext, commands, Position, Selection, window} from 'vscode';
 
 
@@ -20,6 +21,15 @@ export function registerCommands(context: ExtensionContext) {
     });
     registerCommand('minimal-emacs.ctrl+w', () => {
         emacsExt.copySelection(true)
+    });
+    registerCommand('minimal-emacs.cmd+shift+,', () => {
+        emacsExt.gotoTop()
+    });
+    registerCommand('minimal-emacs.cmd+shift+.', () => {
+        emacsExt.gotoBottom()
+    });
+    registerCommand('minimal-emacs.ctrl+v', () => {
+        emacsExt.moveLargeDown()
     });
 
     console.log('registerCommands in keymap done')
@@ -91,11 +101,7 @@ class EmacsExt {
         editor.edit(builder => builder.insert(selection.start, this._textBuffer))
     }
 
-    public toggleSelectionAnchor() {
-        let mode = !this._selectMode
-        this.setFlag('emacsKey.selectMode', mode)
-        this._selectMode = mode
-
+    private resetSelection() {
         if (!this._selectMode && !this._textBuffer) {
             let editor = window.activeTextEditor;
             if (!editor) {
@@ -105,10 +111,15 @@ class EmacsExt {
         }
     }
 
+    public toggleSelectionAnchor() {
+        let mode = !this._selectMode
+        this.setFlag('emacsKey.selectMode', mode)
+        this._selectMode = mode
+
+        this.resetSelection()
+    }
+
     public copySelection(is_cut: boolean) {
-        if (!this._selectMode) {
-            return
-        }
         let editor = window.activeTextEditor;
         if (!editor) {
             return;
@@ -126,6 +137,68 @@ class EmacsExt {
         this._textBuffer = text
         this._posAtTextBufferred = new Position(0, 0)
 
-        this.toggleSelectionAnchor()
+        if (this._selectMode) {
+            this.toggleSelectionAnchor()
+        } else {
+            this.resetSelection()
+        }
+    }
+
+    public gotoTop() {
+        let editor = window.activeTextEditor;
+        if (!editor) {
+            return;
+        }
+        
+        let selection = editor.selection
+        if (!selection) {
+            return;
+        }
+        editor.selection = new Selection(new Position(0, 0), new Position(0, 0))
+        commands.executeCommand('cursorLineStart')
+    }
+
+    public gotoBottom() {
+        let editor = window.activeTextEditor;
+        if (!editor) {
+            return;
+        }
+
+        let bottom = editor.document.lineCount - 1
+        editor.selection = new Selection(new Position(bottom, 0), new Position(bottom, 0))
+        commands.executeCommand('cursorLineEnd')
+    }
+    
+    public moveDelta(delta: number) {
+        let editor = window.activeTextEditor;
+        if (!editor) {
+            return;
+        }
+        
+        let selection = editor.selection
+        if (!selection) {
+            return;
+        }
+
+        let line = editor.document.lineAt(editor.selection.active)
+        let target = line.lineNumber + delta
+
+        if (target < 0) {
+            target = 0
+        }
+        if (target >= editor.document.lineCount) {
+            target = editor.document.lineCount - 1
+        }
+
+        editor.selection = new Selection(new Position(target, 0), new Position(target, 0))
+        commands.executeCommand('cursorLineStart')
+}
+
+    public moveLargeDown() {
+        this.moveDelta(50)
+    }
+
+    public moveLargeUp() {
+        this.moveDelta(-10)
     }
 }

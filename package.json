@@ -146,6 +146,21 @@
         "key": "ctrl+/",
         "command": "undo",
         "when": "editorTextFocus"
+      },
+      {
+        "key": "cmd+shift+,",
+        "command": "minimal-emacs.cmd+shift+,",
+        "when": "editorTextFocus"
+      },
+      {
+        "key": "cmd+shift+.",
+        "command": "minimal-emacs.cmd+shift+.",
+        "when": "editorTextFocus"
+      },
+      {
+        "key": "ctrl+v",
+        "command": "minimal-emacs.ctrl+v",
+        "when": "editorTextFocus"
       }
     ]
   },
