@@ -1,4 +1,3 @@
-import { stringify } from 'querystring';
 import {ExtensionContext, commands, Position, Selection, window} from 'vscode';
 
 
