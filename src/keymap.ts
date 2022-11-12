@@ -154,7 +154,7 @@ class EmacsExt {
             return;
         }
         editor.selection = new Selection(new Position(0, 0), new Position(0, 0))
-        commands.executeCommand('cursorLineStart')
+        commands.executeCommand('scrollEditorTop')
     }
 
     public gotoBottom() {
@@ -166,6 +166,7 @@ class EmacsExt {
         let bottom = editor.document.lineCount - 1
         editor.selection = new Selection(new Position(bottom, 0), new Position(bottom, 0))
         commands.executeCommand('cursorLineEnd')
+        commands.executeCommand('scrollEditorBottom')
     }
     
     public moveDelta(delta: number) {
@@ -191,7 +192,7 @@ class EmacsExt {
 
         editor.selection = new Selection(new Position(target, 0), new Position(target, 0))
         commands.executeCommand('cursorLineStart')
-}
+    }
 
     public moveLargeDown() {
         this.moveDelta(50)
