@@ -62,7 +62,7 @@ export class FileContainer extends AbsFileItem{
         super(targetpath);
     }
 
-    private convertToQuickPickDisplayString(urls: Uri[]) {
+    private toStringPath(urls: Uri[]) {
         let urlstrs = urls.map(url => {
             let urlstr = url.toString()
             return urlstr.replace('file://', '')
@@ -83,7 +83,7 @@ export class FileContainer extends AbsFileItem{
         let findarg = relativepath.concat('*')
         console.log('1 targetpath='.concat(this.targetpath, ', findarg=', findarg))
         let files_thenable: Thenable<AbsFileItem[]> = workspace.findFiles(findarg).then(urls => {
-            return this.convertToQuickPickDisplayString(urls).map(itempath => {
+            return this.toStringPath(urls).map(itempath => {
                 return new FileItem(itempath)
             })
         }).then(files => {
@@ -101,7 +101,7 @@ export class FileContainer extends AbsFileItem{
         files_thenable.then(files => {
             // add sub folder
             workspace.findFiles(findarg.concat('/*')).then(urls => {
-                let childfolders = new Set(this.convertToQuickPickDisplayString(urls).map(url => {
+                let childfolders = new Set(this.toStringPath(urls).map(url => {
                     return getUpperFolderPath(url)
                 }))
                 console.log(childfolders)
