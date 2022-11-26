@@ -1,6 +1,5 @@
-import {ExtensionContext, commands, Position, Selection, window, workspace, Uri} from 'vscode';
+import {ExtensionContext, commands, Position, Selection, window, workspace, Uri, QuickPickItem, QuickInputButton, QuickPickItemKind} from 'vscode';
 import path = require('path');
-import { Url } from 'url';
 
 export function registerCommands(context: ExtensionContext) {
     function registerCommand(commandid: string, command_func: (...args: any[]) => any) {
@@ -37,6 +36,122 @@ export function registerCommands(context: ExtensionContext) {
 
     console.log('registerCommands in keymap done')
 }
+
+
+function getUpperFolderPath(targetpath: string) {
+    let filename = path.basename(targetpath)
+    let folderpath = path.dirname(targetpath)
+
+    if (filename) {
+        return folderpath.concat('/')
+    }
+
+    return path.dirname(folderpath).concat('/')
+}
+
+
+abstract class AbsFileItem implements QuickPickItem {
+    rootpath!: string;
+    targetpath: string
+    label: string;
+    kind?: QuickPickItemKind | undefined;
+    description?: string | undefined;
+    detail?: string | undefined;
+    picked?: boolean | undefined;
+    alwaysShow?: boolean | undefined;
+    buttons?: readonly QuickInputButton[] | undefined;
+
+    constructor(rootpath: string, label: string, targetpath: string) {
+        this.rootpath = rootpath
+        this.label = label
+        this.targetpath = targetpath
+    }
+
+    abstract open(): void;
+}
+
+class FileItem 	extends AbsFileItem {
+
+    constructor(rootpath: string, label: string, targetpath: string) {
+        super(rootpath, label, targetpath);
+    }
+
+    public open(): void {
+        let openpath = 'file://'.concat(this.rootpath, this.targetpath)
+        console.log('openpath='.concat(openpath))
+        workspace.openTextDocument(Uri.parse(openpath)).then(doc => {
+            window.showTextDocument(doc)
+        })
+
+    }
+}
+
+class FileContainer extends AbsFileItem{
+    constructor(rootpath: string, label: string, targetpath: string) {
+        super(rootpath, label, targetpath);
+    }
+
+    private convertToQuickPickDisplayString(urls: Uri[]) {
+        let urlstrs = urls.map(url => {
+            let urlstr = url.toString()
+            return urlstr.replace('file://', '').replace(this.rootpath, '')
+        })
+        return urlstrs
+    }
+
+    private showFileListDialog(files: AbsFileItem[], parentpath: string) {
+        window.showQuickPick(files).then(selected => {
+            if (selected) {
+                selected.open()
+            }
+        })
+    }
+
+    public open(): void {
+        let rootpath = this.rootpath
+        let findpath = this.targetpath
+        let findarg = findpath.replace(rootpath, '').concat('*')
+        console.log('findpath='.concat(findarg))
+        let files_thenable: Thenable<AbsFileItem[]> = workspace.findFiles(findarg).then(urls => {
+            return this.convertToQuickPickDisplayString(urls).map(url => {
+                return new FileItem(rootpath, url, url)
+            })
+        }).then(urls => {
+            // add upper folder
+            if (rootpath != findpath) {
+                let newfindpath = getUpperFolderPath(findpath)
+                urls.push(new FileContainer(rootpath, '..', newfindpath))
+            }
+            return urls
+        })
+
+        files_thenable.then(files => {
+            // add sub folder
+            workspace.findFiles(findarg.concat('/*')).then(urls => {
+                let childfolders = new Set(this.convertToQuickPickDisplayString(urls).map(url => {
+                    return getUpperFolderPath(url)
+                }))
+                console.log(childfolders)
+                return [...childfolders]
+            }).then(subfolders => {
+                let items: AbsFileItem[] = files.concat(subfolders.map(f => {
+                    return new FileContainer(rootpath, f, f)
+                }))
+
+                if (items) {
+                    let newfindpath = getUpperFolderPath(findpath)
+                    this.showFileListDialog(items, newfindpath)
+                } else {
+                    window.showInformationMessage('No files')
+                }
+    
+            })
+
+        })
+
+    }
+}
+
 
 class EmacsExt {
     private _textBuffer: string;
@@ -206,17 +321,6 @@ class EmacsExt {
         this.moveDelta(-10)
     }
 
-    private getUpperFolderPath(targetpath: string) {
-        let filename = path.basename(targetpath)
-        let folderpath = path.dirname(targetpath)
-
-        if (filename) {
-            return folderpath.concat('/')
-        }
-
-        return path.dirname(folderpath).concat('/')
-    }
-
     private getRootPath() {
         if (!workspace.workspaceFolders) {
             return ''
@@ -226,67 +330,22 @@ class EmacsExt {
         return rootpath
     }
 
-    private convertToQuickPickDisplayString(urls: Uri[], rootpath: string) {
-        let urlstrs = urls.map(url => {
-            let urlstr = url.toString()
-            return urlstr.replace('file://', '').replace(rootpath, '')
-        })
-        return urlstrs
-    }
-
-    public openFileInFolder(findpath: string) {
+    public openFile() {
         let rootpath = this.getRootPath()
         if (!rootpath) {
             return
         }
-        let findarg = findpath.replace(rootpath, '').concat('*')
-        console.log('findpath='.concat(findarg))
-        var files = workspace.findFiles(findarg).then(urls => {
-            return this.convertToQuickPickDisplayString(urls, rootpath)
-        }).then(urls => {
-            // add upper folder
-            if (rootpath != findpath) {
-                urls.push('..')
-            }
-            return urls
-        })
 
-        if (files) {
-            window.showQuickPick(files).then(
-                selected => {
-                    if (selected) {
-                        console.log('selected='.concat(selected))
-                        if (selected == '..') {
-                            let newfindpath = this.getUpperFolderPath(findpath)
-                            console.log('newfindpath='.concat(newfindpath))
-                            this.openFileInFolder(newfindpath)
-                            return
-                        }
-                        let openpath = 'file://'.concat(rootpath, selected)
-                        console.log('openpath='.concat(openpath))
-                        workspace.openTextDocument(Uri.parse(openpath)).then(
-                            doc => {
-                                window.showTextDocument(doc)
-                            }
-                        )
-                    }
-                })
-        } else {
-            window.showInformationMessage('No files')
-        }
-    }
-
-    public openFile() {
         let curfile = window.activeTextEditor?.document.fileName
         if (!curfile) {
             return
         }
 
         let curfilename = path.basename(curfile)
-        let findpath = this.getUpperFolderPath(curfile)
+        let findpath = getUpperFolderPath(curfile)
         console.log('current : path = '.concat(findpath, ', filename = ', curfilename))
 
-        this.openFileInFolder(findpath)
+        let item = new FileContainer(rootpath, findpath, findpath)
+        item.open()
     }
-
 }
