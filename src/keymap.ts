@@ -1,5 +1,8 @@
-import {ExtensionContext, commands, Position, Selection, window, workspace, Uri, QuickPickItem, QuickInputButton, QuickPickItemKind} from 'vscode';
+import { relative } from 'path';
 import path = require('path');
+import {ExtensionContext, commands, Position, Selection, window, workspace, Uri, QuickPickItem, QuickInputButton, QuickPickItemKind} from 'vscode';
+import {getUpperFolderPath, FileContainer} from './fileItem';
+
 
 export function registerCommands(context: ExtensionContext) {
     function registerCommand(commandid: string, command_func: (...args: any[]) => any) {
@@ -37,7 +40,7 @@ export function registerCommands(context: ExtensionContext) {
     console.log('registerCommands in keymap done')
 }
 
-
+/*
 function getUpperFolderPath(targetpath: string) {
     let filename = path.basename(targetpath)
     let folderpath = path.dirname(targetpath)
@@ -151,7 +154,7 @@ class FileContainer extends AbsFileItem{
 
     }
 }
-
+*/
 
 class EmacsExt {
     private _textBuffer: string;
@@ -343,9 +346,10 @@ class EmacsExt {
 
         let curfilename = path.basename(curfile)
         let findpath = getUpperFolderPath(curfile)
-        console.log('current : path = '.concat(findpath, ', filename = ', curfilename))
+        let relativepath = findpath.replace(rootpath, '')
+        console.log('current : path = '.concat(relativepath, ', filename = ', curfilename))
 
-        let item = new FileContainer(rootpath, findpath, findpath)
+        let item = new FileContainer(rootpath, relativepath)
         item.open()
     }
 }
