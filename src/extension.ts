@@ -22,7 +22,7 @@ export function activate(context: ExtensionContext) {
     });
     context.subscriptions.push(disposable);
 
-    registerCommands(context)
+    registerCommands(context);
 }
 
 // this method is called when your extension is deactivated

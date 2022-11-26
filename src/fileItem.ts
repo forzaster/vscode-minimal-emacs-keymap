@@ -4,24 +4,24 @@ import path = require('path');
 
 function getRootPath() {
     if (!workspace.workspaceFolders) {
-        return ''
+        return '';
     }
-    let rootpath = workspace.workspaceFolders[0].uri.path.concat('/')
-    console.log('rootpath='.concat(rootpath))
-    return rootpath
+    let rootpath = workspace.workspaceFolders[0].uri.path.concat('/');
+    //console.log('rootpath='.concat(rootpath))
+    return rootpath;
 }
 
 export function getUpperFolderPath(targetpath: string) {
-    let folderpath = path.dirname(targetpath)
+    let folderpath = path.dirname(targetpath);
 
     if (folderpath == '.') {
-        return ''
+        return '';
     }
-    return folderpath.concat('/')
+    return folderpath.concat('/');
 }
 
 export abstract class AbsFileItem implements QuickPickItem {
-    rootpath: string
+    rootpath: string;
     targetpath: string;
     label: string;
     kind?: QuickPickItemKind | undefined;
@@ -32,9 +32,9 @@ export abstract class AbsFileItem implements QuickPickItem {
     buttons?: readonly QuickInputButton[] | undefined;
 
     constructor(targetpath: string) {
-        this.rootpath = getRootPath()
-        this.targetpath = targetpath
-        this.label = targetpath.replace(this.rootpath, '')
+        this.rootpath = getRootPath();
+        this.targetpath = targetpath;
+        this.label = targetpath.replace(this.rootpath, '');
     }
 
     abstract open(): void;
@@ -43,14 +43,15 @@ export abstract class AbsFileItem implements QuickPickItem {
 export class FileItem extends AbsFileItem {
 
     constructor(targetpath: string) {
-        super(targetpath)
+        super(targetpath);
     }
 
     public open(): void {
-        let openpath = 'file://'.concat(this.targetpath)
-        console.log('openpath='.concat(openpath))
+        let openpath = 'file://'.concat(this.targetpath);
+        //console.log('openpath='.concat(openpath))
         workspace.openTextDocument(Uri.parse(openpath)).then(doc => {
-            window.showTextDocument(doc)
+            var editor = window.activeTextEditor;
+            window.showTextDocument(doc, editor);
         })
 
     }
@@ -62,60 +63,61 @@ export class FileContainer extends AbsFileItem{
         super(targetpath);
     }
 
-    private toStringPath(urls: Uri[]) {
+    private toStringPathArray(urls: Uri[]) {
         let urlstrs = urls.map(url => {
-            let urlstr = url.toString()
-            return urlstr.replace('file://', '')
+            let urlstr = url.toString();
+            return urlstr.replace('file://', '');
         })
-        return urlstrs
+        return urlstrs;
     }
 
-    private showFileListDialog(files: AbsFileItem[]) {
-        window.showQuickPick(files).then(selected => {
+    private show(items: AbsFileItem[]) {
+        if (items.length == 0) {
+            window.showInformationMessage('No files');
+            return;
+        }
+
+        window.showQuickPick(items).then(selected => {
             if (selected) {
-                selected.open()
+                selected.open();
             }
         })
     }
 
     public open(): void {
-        let relativepath = this.targetpath.replace(this.rootpath, '')
-        let findarg = relativepath.concat('*')
-        console.log('1 targetpath='.concat(this.targetpath, ', findarg=', findarg))
-        let files_thenable: Thenable<AbsFileItem[]> = workspace.findFiles(findarg).then(urls => {
-            return this.toStringPath(urls).map(itempath => {
-                return new FileItem(itempath)
+        let relativepath = this.targetpath.replace(this.rootpath, '');
+        let findarg = relativepath.concat('*');
+        //console.log('1 targetpath='.concat(this.targetpath, ', findarg=', findarg))
+        workspace.findFiles(findarg).then(urls => {
+            // add files in current folder
+            return this.toStringPathArray(urls).map(itempath => {
+                return new FileItem(itempath);
             })
         }).then(files => {
-            // add upper folder
+            // add upper folder as '..'
             if (relativepath != '') {
-                let parentpath = getUpperFolderPath(this.targetpath)
-                console.log('2 findpath='.concat(relativepath, ', parentpath=', parentpath))
-                let c = new FileContainer(parentpath)
-                c.label = '..'
-                files.push(c)
+                let parentpath = getUpperFolderPath(this.targetpath);
+                //console.log('2 findpath='.concat(relativepath, ', parentpath=', parentpath))
+                let c = new FileContainer(parentpath);
+                c.label = '..';
+                files.push(c);
             }
-            return files
-        })
-
-        files_thenable.then(files => {
+            return files;
+        }).then(files => {
             // add sub folder
             workspace.findFiles(findarg.concat('/*')).then(urls => {
-                let childfolders = new Set(this.toStringPath(urls).map(url => {
-                    return getUpperFolderPath(url)
+                // remove duplicate subfolder by Set
+                let childfolders = new Set(this.toStringPathArray(urls).map(url => {
+                    return getUpperFolderPath(url);
                 }))
-                console.log(childfolders)
-                return [...childfolders]
+                //console.log(childfolders)
+                return [...childfolders];
             }).then(subfolders => {
                 let items: AbsFileItem[] = files.concat(subfolders.map(f => {
-                    return new FileContainer(f)
+                    return new FileContainer(f);
                 }))
 
-                if (items) {
-                    this.showFileListDialog(items)
-                } else {
-                    window.showInformationMessage('No files')
-                }
+                this.show(items);
             })
         })
     }

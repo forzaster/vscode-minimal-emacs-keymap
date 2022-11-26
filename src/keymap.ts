@@ -1,5 +1,5 @@
-import {ExtensionContext, commands, Position, Selection, window} from 'vscode';
-import {getUpperFolderPath, FileContainer} from './fileItem';
+import {ExtensionContext, commands, Position, Selection, window, workspace} from 'vscode';
+import {getUpperFolderPath, FileContainer, FileItem} from './fileItem';
 
 
 export function registerCommands(context: ExtensionContext) {
@@ -11,31 +11,39 @@ export function registerCommands(context: ExtensionContext) {
     const emacsExt = new EmacsExt();
 
     registerCommand('minimal-emacs.ctrl+k', () => {
-        emacsExt.deleteLine()
+        emacsExt.deleteLine();
     });
     registerCommand('minimal-emacs.ctrl+y', () => {
-        emacsExt.pasteTextBuffer()
+        emacsExt.pasteTextBuffer();
     });
     registerCommand('minimal-emacs.ctrl+space', () => {
-        emacsExt.toggleSelectionAnchor()
+        emacsExt.toggleSelectionAnchor();
     });
     registerCommand('minimal-emacs.ctrl+w', () => {
-        emacsExt.copySelection(true)
+        emacsExt.copySelection(true);
     });
     registerCommand('minimal-emacs.cmd+shift+,', () => {
-        emacsExt.gotoTop()
+        emacsExt.gotoTop();
     });
     registerCommand('minimal-emacs.cmd+shift+.', () => {
-        emacsExt.gotoBottom()
+        emacsExt.gotoBottom();
     });
     registerCommand('minimal-emacs.ctrl+v', () => {
-        emacsExt.moveLargeDown()
+        emacsExt.moveLargeDown();
     });
     registerCommand('minimal-emacs.ctrl+x.ctrl+f', () => {
-        emacsExt.openFile()
+        emacsExt.openFile();
+        emacsExt.updateHistories(workspace.textDocuments.map(d => {return d.fileName}))
+    });
+    registerCommand('minimal-emacs.ctrl+x.ctrl+b', () => {
+        emacsExt.openHistory();
     });
 
-    console.log('registerCommands in keymap done')
+    workspace.onDidOpenTextDocument(event => {
+        emacsExt.updateHistories([event.fileName])
+    })
+
+    console.log('registerCommands in keymap done');
 }
 
 
@@ -43,11 +51,13 @@ class EmacsExt {
     private _textBuffer: string;
     private _posAtTextBufferred: Position;
     private _selectMode: boolean = true;
+    private _fileHistory: string[] = [];
+    private _HISTORY_MAX: number = 20;
 
     constructor() {
-        this._textBuffer = ''
+        this._textBuffer = '';
         this._posAtTextBufferred = new Position(0, 0);
-        this.toggleSelectionAnchor()
+        this.toggleSelectionAnchor();
     }
 
     private setFlag(name: string, v: boolean) {
@@ -60,34 +70,34 @@ class EmacsExt {
             return;
         }
         
-        let line = editor.document.lineAt(editor.selection.active)
+        let line = editor.document.lineAt(editor.selection.active);
         if (!line) {
             return;
         }
         //console.log(line)
 
-        let selection = editor.selection
+        let selection = editor.selection;
         if (!selection) {
             return;
         }
 
-        let endPos = new Position(selection.start.line, line.text.length)
+        let endPos = new Position(selection.start.line, line.text.length);
         if (selection.start.character == line.text.length) {
             // New line
-            endPos = new Position(selection.start.line+1, 0)
+            endPos = new Position(selection.start.line+1, 0);
         }
 
-        let target = new Selection(selection.start, endPos)
-        let text = editor.document.getText(target)
+        let target = new Selection(selection.start, endPos);
+        let text = editor.document.getText(target);
         //console.log('remove ' + text)
-        editor.edit(builder => builder.delete(target))
+        editor.edit(builder => builder.delete(target));
 
         if (selection.start == this._posAtTextBufferred) {
-            this._textBuffer += text
+            this._textBuffer += text;
         } else {
-            this._textBuffer = text
+            this._textBuffer = text;
         }
-        this._posAtTextBufferred = selection.start
+        this._posAtTextBufferred = selection.start;
         //console.log('textBuffer ' + this._textBuffer)
     }
 
@@ -97,12 +107,12 @@ class EmacsExt {
             return;
         }
         
-        let selection = editor.selection
+        let selection = editor.selection;
         if (!selection) {
             return;
         }
 
-        editor.edit(builder => builder.insert(selection.start, this._textBuffer))
+        editor.edit(builder => builder.insert(selection.start, this._textBuffer));
     }
 
     private resetSelection() {
@@ -111,16 +121,16 @@ class EmacsExt {
             if (!editor) {
                 return;
             }
-            editor.selection = new Selection(editor.selection.active, editor.selection.active)
+            editor.selection = new Selection(editor.selection.active, editor.selection.active);
         }
     }
 
     public toggleSelectionAnchor() {
-        let mode = !this._selectMode
-        this.setFlag('emacsKey.selectMode', mode)
-        this._selectMode = mode
+        let mode = !this._selectMode;
+        this.setFlag('emacsKey.selectMode', mode);
+        this._selectMode = mode;
 
-        this.resetSelection()
+        this.resetSelection();
     }
 
     public copySelection(is_cut: boolean) {
@@ -129,22 +139,22 @@ class EmacsExt {
             return;
         }
         
-        let selection = editor.selection
+        let selection = editor.selection;
         if (!selection) {
             return;
         }
 
-        let text = editor.document.getText(selection)
+        let text = editor.document.getText(selection);
         if (is_cut) {
-            editor.edit(builder => builder.delete(selection))
+            editor.edit(builder => builder.delete(selection));
         }
-        this._textBuffer = text
-        this._posAtTextBufferred = new Position(0, 0)
+        this._textBuffer = text;
+        this._posAtTextBufferred = new Position(0, 0);
 
         if (this._selectMode) {
-            this.toggleSelectionAnchor()
+            this.toggleSelectionAnchor();
         } else {
-            this.resetSelection()
+            this.resetSelection();
         }
     }
 
@@ -154,12 +164,12 @@ class EmacsExt {
             return;
         }
         
-        let selection = editor.selection
+        let selection = editor.selection;
         if (!selection) {
             return;
         }
-        editor.selection = new Selection(new Position(0, 0), new Position(0, 0))
-        commands.executeCommand('scrollEditorTop')
+        editor.selection = new Selection(new Position(0, 0), new Position(0, 0));
+        commands.executeCommand('scrollEditorTop');
     }
 
     public gotoBottom() {
@@ -168,10 +178,10 @@ class EmacsExt {
             return;
         }
 
-        let bottom = editor.document.lineCount - 1
-        editor.selection = new Selection(new Position(bottom, 0), new Position(bottom, 0))
-        commands.executeCommand('cursorLineEnd')
-        commands.executeCommand('scrollEditorBottom')
+        let bottom = editor.document.lineCount - 1;
+        editor.selection = new Selection(new Position(bottom, 0), new Position(bottom, 0));
+        commands.executeCommand('cursorLineEnd');
+        commands.executeCommand('scrollEditorBottom');
     }
     
     public moveDelta(delta: number) {
@@ -180,41 +190,76 @@ class EmacsExt {
             return;
         }
         
-        let selection = editor.selection
+        let selection = editor.selection;
         if (!selection) {
             return;
         }
 
-        let line = editor.document.lineAt(editor.selection.active)
-        let target = line.lineNumber + delta
+        let line = editor.document.lineAt(editor.selection.active);
+        let target = line.lineNumber + delta;
 
         if (target < 0) {
-            target = 0
+            target = 0;
         }
         if (target >= editor.document.lineCount) {
-            target = editor.document.lineCount - 1
+            target = editor.document.lineCount - 1;
         }
 
-        editor.selection = new Selection(new Position(target, 0), new Position(target, 0))
-        commands.executeCommand('cursorLineStart')
+        editor.selection = new Selection(new Position(target, 0), new Position(target, 0));
+        commands.executeCommand('cursorLineStart');
     }
 
     public moveLargeDown() {
-        this.moveDelta(50)
+        this.moveDelta(50);
     }
 
     public moveLargeUp() {
-        this.moveDelta(-10)
+        this.moveDelta(-10);
     }
 
     public openFile() {
-        let curfile = window.activeTextEditor?.document.fileName
+        let curfile = window.activeTextEditor?.document.fileName;
         if (!curfile) {
-            return
+            return;
         }
 
-        let findpath = getUpperFolderPath(curfile)
-        let item = new FileContainer(findpath)
-        item.open()
+        let findpath = getUpperFolderPath(curfile);
+        let item = new FileContainer(findpath);
+        item.open();
+    }
+
+    public updateHistory(filename: string) {
+        let idx = this._fileHistory.indexOf(filename)
+        if (idx >= 0) {
+            this._fileHistory.splice(idx, 1)
+        }
+        this._fileHistory.push(filename)
+
+        if (this._fileHistory.length >= this._HISTORY_MAX) {
+            this._fileHistory = this._fileHistory.slice(1)
+        }
+
+        //console.log(this._fileHistory)
+    }
+
+    public updateHistories(filenames: string[]) {
+        filenames.map(f => {
+            if (f.endsWith('.git')) {
+                return;
+            }
+            this.updateHistory(f);
+        })
+    }
+
+    public openHistory() {
+        let files = this._fileHistory.reverse().map(f => {
+            return new FileItem(f)
+        })
+
+        window.showQuickPick(files).then(selected => {
+            if (selected) {
+                selected.open()
+            }
+        })
     }
 }
