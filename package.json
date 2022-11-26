@@ -123,6 +123,11 @@
         "when": "editorTextFocus"
       },
       {
+        "key": "ctrl+x ctrl+f",
+        "command": "minimal-emacs.ctrl+x.ctrl+f",
+        "when": "editorTextFocus"
+      },
+      {
         "key": "ctrl+s",
         "command": "actions.find",
         "when": "editorFocus || editorIsOpen"
