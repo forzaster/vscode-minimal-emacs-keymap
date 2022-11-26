@@ -324,32 +324,14 @@ class EmacsExt {
         this.moveDelta(-10)
     }
 
-    private getRootPath() {
-        if (!workspace.workspaceFolders) {
-            return ''
-        }
-        let rootpath = workspace.workspaceFolders[0].uri.path.concat('/')
-        console.log('rootpath='.concat(rootpath))
-        return rootpath
-    }
-
     public openFile() {
-        let rootpath = this.getRootPath()
-        if (!rootpath) {
-            return
-        }
-
         let curfile = window.activeTextEditor?.document.fileName
         if (!curfile) {
             return
         }
 
-        let curfilename = path.basename(curfile)
         let findpath = getUpperFolderPath(curfile)
-        let relativepath = findpath.replace(rootpath, '')
-        console.log('current : path = '.concat(relativepath, ', filename = ', curfilename))
-
-        let item = new FileContainer(rootpath, relativepath)
+        let item = new FileContainer(findpath)
         item.open()
     }
 }
