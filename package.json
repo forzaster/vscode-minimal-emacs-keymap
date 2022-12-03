@@ -138,6 +138,11 @@
         "when": "editorFocus || editorIsOpen"
       },
       {
+        "key": "ctrl+r",
+        "command": "actions.find",
+        "when": "editorFocus || editorIsOpen"
+      },
+      {
         "key": "ctrl+s",
         "command": "editor.action.nextMatchFindAction",
         "when": "editorFocus && findInputFocussed"
