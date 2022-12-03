@@ -2,7 +2,7 @@
   "name": "minimal-emacs-keymap",
   "displayName": "minimal-emacs-keymap",
   "description": "minimal emacs keymap",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "engines": {
     "vscode": "^1.71.0"
   },
