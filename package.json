@@ -2,7 +2,7 @@
   "name": "minimal-emacs-keymap",
   "displayName": "minimal-emacs-keymap",
   "description": "minimal emacs keymap",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "engines": {
     "vscode": "^1.71.0"
   },
@@ -28,7 +28,7 @@
           "to": "right",
           "value": 1
         },
-        "when": "editorTextFocus && !emacsKey.selectMode"
+        "when": "editorTextFocus && !emacsKey.selectMode || terminalFocus"
       },
       {
         "key": "ctrl+b",
@@ -37,7 +37,7 @@
           "to": "left",
           "value": 1
         },
-        "when": "editorTextFocus && !emacsKey.selectMode"
+        "when": "editorTextFocus && !emacsKey.selectMode || terminalFocus"
       },
       {
         "key": "ctrl+p",
@@ -60,12 +60,12 @@
       {
         "key": "ctrl+a",
         "command": "cursorLineStart",
-        "when": "editorTextFocus && !emacsKey.selectMode"
+        "when": "editorTextFocus && !emacsKey.selectMode || terminalFocus"
       },
       {
         "key": "ctrl+e",
         "command": "cursorLineEnd",
-        "when": "editorTextFocus && !emacsKey.selectMode"
+        "when": "editorTextFocus && !emacsKey.selectMode || terminalFocus"
       },
       {
         "key": "ctrl+f",
@@ -95,12 +95,12 @@
       {
         "key": "ctrl+d",
         "command": "deleteRight",
-        "when": "editorTextFocus"
+        "when": "editorTextFocus || terminalFocus"
       },
       {
         "key": "ctrl+k",
         "command": "minimal-emacs.ctrl+k",
-        "when": "editorTextFocus"
+        "when": "editorTextFocus || terminalFocus"
       },
       {
         "key": "ctrl+y",
@@ -186,6 +186,21 @@
         "key": "ctrl+t ctrl+n",
         "command": "workbench.action.terminal.focus",
         "when": "editorTextFocus"
+      },
+      {
+        "key": "win+s",
+        "command": "workbench.action.files.save",
+        "when": "editorTextFocus"
+      },
+      {
+        "key": "win+c",
+        "command": "editor.action.clipboardCopyAction",
+        "when": "editorTextFocus || terminalFocus"
+      },
+      {
+        "key": "win+v",
+        "command": "editor.action.clipboardPasteAction",
+        "when": "editorTextFocus || terminalFocus"
       },
       {
         "key": "ctrl+t ctrl+p",
