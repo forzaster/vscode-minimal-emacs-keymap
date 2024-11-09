@@ -2,7 +2,7 @@ import {window, workspace, Uri, QuickPickItem, QuickInputButton, QuickPickItemKi
 import path = require('path');
 
 
-function getRootPath() {
+export function GetRootPath() {
     if (!workspace.workspaceFolders) {
         return '';
     }
@@ -32,7 +32,7 @@ export abstract class AbsFileItem implements QuickPickItem {
     buttons?: readonly QuickInputButton[] | undefined;
 
     constructor(targetpath: string) {
-        this.rootpath = getRootPath();
+        this.rootpath = GetRootPath();
         this.targetpath = targetpath;
         this.label = targetpath.replace(this.rootpath, '');
     }
@@ -77,6 +77,7 @@ export class FileContainer extends AbsFileItem{
             return;
         }
 
+        items = items.sort((a,b) => a.targetpath.localeCompare(b.targetpath))
         window.showQuickPick(items).then(selected => {
             if (selected) {
                 selected.open();
@@ -116,7 +117,6 @@ export class FileContainer extends AbsFileItem{
                 let items: AbsFileItem[] = files.concat(subfolders.map(f => {
                     return new FileContainer(f);
                 }))
-
                 this.show(items);
             })
         })

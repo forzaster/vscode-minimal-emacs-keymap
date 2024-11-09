@@ -1,5 +1,5 @@
 import {ExtensionContext, commands, Position, Selection, window, workspace} from 'vscode';
-import {getUpperFolderPath, FileContainer, FileItem} from './fileItem';
+import {getUpperFolderPath, FileContainer, FileItem, GetRootPath} from './fileItem';
 
 
 export function registerCommands(context: ExtensionContext) {
@@ -33,14 +33,15 @@ export function registerCommands(context: ExtensionContext) {
     });
     registerCommand('minimal-emacs.ctrl+x.ctrl+f', () => {
         emacsExt.openFile();
-        emacsExt.updateHistories(workspace.textDocuments.map(d => {return d.fileName}))
     });
     registerCommand('minimal-emacs.ctrl+x.ctrl+b', () => {
         emacsExt.openHistory();
     });
 
     workspace.onDidOpenTextDocument(event => {
-        emacsExt.updateHistories([event.fileName])
+        if (emacsExt.isHistoryFiles(event.uri.scheme)) {
+            emacsExt.updateHistories([event.fileName])
+        }
     })
 
     console.log('registerCommands in keymap done');
@@ -52,7 +53,7 @@ class EmacsExt {
     private _posAtTextBufferred: Position;
     private _selectMode: boolean = true;
     private _fileHistory: string[] = [];
-    private _HISTORY_MAX: number = 20;
+    private _HISTORY_MAX: number = 100;
 
     constructor() {
         this._textBuffer = '';
@@ -238,8 +239,6 @@ class EmacsExt {
         if (this._fileHistory.length >= this._HISTORY_MAX) {
             this._fileHistory = this._fileHistory.slice(1)
         }
-
-        //console.log(this._fileHistory)
     }
 
     public updateHistories(filenames: string[]) {
@@ -251,14 +250,29 @@ class EmacsExt {
         })
     }
 
-    public openHistory() {
-        let files = this._fileHistory.reverse().map(f => {
-            return new FileItem(f)
-        })
+    public isHistoryFiles(scheme: string) {
+        return scheme == "file" || scheme == "vscode-notebook-cell";
+    }
 
+    public openHistory() {
+        let fileNames2 = workspace.textDocuments.filter(f => {
+            return this.isHistoryFiles(f.uri.scheme);
+        }).map(f => {
+            return f.fileName;
+        })
+        let fileNames = this._fileHistory.concat(fileNames2)
+
+        let rootPath = GetRootPath()
+        fileNames = Array.from(new Set(fileNames)).filter(f => {
+            return f.startsWith(rootPath)
+        }).sort()
+
+        let files = fileNames.map(f => {
+            return new FileItem(f);
+        })
         window.showQuickPick(files).then(selected => {
             if (selected) {
-                selected.open()
+                selected.open();
             }
         })
     }
